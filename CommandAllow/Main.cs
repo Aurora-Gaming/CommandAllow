@@ -17,6 +17,8 @@ namespace CommandAllow
         public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
         public Configuration Config;
 
+        public List<Command> AllowCommand = new List<Command>();
+
         public Main(Terraria.Main game) : base(game)
         {
             Order = 1;
@@ -68,7 +70,8 @@ namespace CommandAllow
             Config = Configuration.Read();
             e?.Player?.SendSuccessMessage($"[{Name}] Successfully reloaded config.");
 
-
+            AllowCommand.ForEach(command => Commands.ChatCommands.Remove(command));
+            Config.InterceptCommands.ForEach(configCommand => AddCommand(configCommand));
         }
 
         private void OnInit(EventArgs args)
@@ -207,9 +210,11 @@ namespace CommandAllow
         /// </summary>
         /// <param name="commandName"></param>
         /// <param name="commandDetails"></param>
-        private void AddCommand(string commandName, (int, string, string, string, string) commandDetails) => Commands.ChatCommands.Add(
-            new Command(Config.CommandAllowPermission.SFormat(commandName),
-                args => {
+        private void AddCommand(string commandName, (int, string, string, string, string) commandDetails)
+        {
+            Command command = new Command(Config.CommandAllowPermission.SFormat(commandName),
+                args =>
+                {
                     bool enabled = args.Player.GetData<bool>($"{commandName}allow");
 
                     args.Player.SetData($"{commandName}allow", !enabled);
@@ -218,7 +223,10 @@ namespace CommandAllow
                 }, $"{commandName}allow")
             {
                 HelpText = commandDetails.Item5
-            });
+            };
+
+            Commands.ChatCommands.Add(command);
+        }
 
         /// <summary>
         /// Removes a command of the format [command]allow. Also deletes all player data associated with that command.
@@ -226,7 +234,12 @@ namespace CommandAllow
         /// <param name="commandName"></param>
         private void RemoveCommand(string commandName)
         {
-            Commands.ChatCommands.RemoveAll(c => c.Name == commandName);
+            Command command = Commands.ChatCommands.FirstOrDefault(c => c.Name == commandName);
+
+            if (command == null) return;
+
+            AllowCommand.Remove(command);
+            Commands.ChatCommands.Remove(command);
             TShock.Players.ForEach(p => p.RemoveData(commandName));
         }
 
