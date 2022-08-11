@@ -1,11 +1,31 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using TShockAPI;
 
 namespace CommandAllow
 {
+    /// <summary>
+    /// Stores all relevant information for each command to be intercepted.
+    /// </summary>
+    public struct CommandDetails
+    {
+        public int NameIndex;
+        public string CommandEnabled;
+        public string CommandDisabled;
+        public string CommandCannotUse;
+        public string CommandHelpText;
+
+        public CommandDetails(int position, string commandEnabled, string commandDisabled, string commandCannotUse, string commandHelpText)
+        {
+            NameIndex = position;
+            CommandEnabled = commandEnabled;
+            CommandDisabled = commandDisabled;
+            CommandCannotUse = commandCannotUse;
+            CommandHelpText = commandHelpText;
+        }
+    }
+
     public class Configuration
     {
         // TODO: Change the config.json file name to a more specific one
@@ -18,9 +38,9 @@ namespace CommandAllow
         public string CommandOverrideAll = "commandallow.overrideall";
 
         // Has an example in the config for the /slap command.s
-        public Dictionary<string, (int, string, string, string, string)> InterceptCommands = new Dictionary<string, (int, string, string, string, string)>
+        public Dictionary<string, CommandDetails> InterceptCommands = new Dictionary<string, CommandDetails>
         {
-            ["slap"] = (0, 
+            ["slap"] = new CommandDetails(0, 
                 "You have enabled slap protection!", 
                 "You have disabled slap protection!", 
                 "You cannot slap this player!",

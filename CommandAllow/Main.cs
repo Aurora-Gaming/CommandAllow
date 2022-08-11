@@ -45,18 +45,18 @@ namespace CommandAllow
 
             if (e.Player.HasPermission(Config.CommandAllowOverride.SFormat(e.CommandName))) return;
 
-            var (index, _, _, errorMessage, _) = Config.InterceptCommands[e.CommandName];
+            var interceptCommand = Config.InterceptCommands[e.CommandName];
 
-            if (index > e.Parameters.Count - 1) return;
+            if (interceptCommand.NameIndex > e.Parameters.Count - 1) return;
 
-            List<TSPlayer> players = TSPlayer.FindByNameOrID(e.Parameters[index]);
+            List<TSPlayer> players = TSPlayer.FindByNameOrID(e.Parameters[interceptCommand.NameIndex]);
 
             if (players.Count != 1) return;
 
             if (!players.First().GetData<bool>($"{e.CommandName}allow")) return;
 
             e.Handled = true;
-            e.Player.SendErrorMessage(errorMessage, players.First().Name);
+            e.Player.SendErrorMessage(interceptCommand.CommandCannotUse, players.First().Name);
         }
 
         private void OnSave(WorldSaveEventArgs args)
@@ -71,7 +71,7 @@ namespace CommandAllow
             e?.Player?.SendSuccessMessage($"[{Name}] Successfully reloaded config.");
 
             AllowCommand.ForEach(command => Commands.ChatCommands.Remove(command));
-            Config.InterceptCommands.ForEach(configCommand => AddCommand(configCommand));
+            Config.InterceptCommands.ForEach(interceptCommand => AddCommand(interceptCommand));
         }
 
         private void OnInit(EventArgs args)
@@ -82,7 +82,7 @@ namespace CommandAllow
             {
                 HelpText = "Allows for players to toggle receiving certain commands. Mimics the functionality of /wallow or /tpallow."
             });
-            Config.InterceptCommands.ForEach(intercept => AddCommand(intercept));
+            Config.InterceptCommands.ForEach(interceptCommand => AddCommand(interceptCommand));
         }
 
         private void OnCommand(CommandArgs args)
@@ -188,11 +188,11 @@ namespace CommandAllow
         /// <param name="commandName"></param>
         private void AddCommand(int playerNameIndex, string commandName)
         {
-            var commandDetails = (playerNameIndex,
+            CommandDetails commandDetails = new CommandDetails(playerNameIndex,
                 Config.Defaults["CommandEnabled"].SFormat(commandName),
                 Config.Defaults["CommandDisable"].SFormat(commandName),
                 Config.Defaults["CommandCannotUse"].SFormat(commandName),
-                Config.Defaults["CommandHelpText"].SFormat(commandName);
+                Config.Defaults["CommandHelpText"].SFormat(commandName));
 
             Config.InterceptCommands.Add(commandName, commandDetails);
             AddCommand(commandName, commandDetails);
@@ -203,14 +203,14 @@ namespace CommandAllow
         /// Loads in commands from the config
         /// </summary>
         /// <param name="command"></param>
-        private void AddCommand(KeyValuePair<string, (int, string, string, string, string)> command) => AddCommand(command.Key, command.Value);
+        private void AddCommand(KeyValuePair<string, CommandDetails> command) => AddCommand(command.Key, command.Value);
 
         /// <summary>
-        /// <inheritdoc cref="AddCommand(KeyValuePair{string, (int, string, string, string, string)})"/>
+        /// <inheritdoc cref="AddCommand(KeyValuePair{string, CommandDetails})"/>
         /// </summary>
         /// <param name="commandName"></param>
         /// <param name="commandDetails"></param>
-        private void AddCommand(string commandName, (int, string, string, string, string) commandDetails)
+        private void AddCommand(string commandName, CommandDetails commandDetails)
         {
             Command command = new Command(Config.CommandAllowPermission.SFormat(commandName),
                 args =>
@@ -218,11 +218,11 @@ namespace CommandAllow
                     bool enabled = args.Player.GetData<bool>($"{commandName}allow");
 
                     args.Player.SetData($"{commandName}allow", !enabled);
-                    args.Player.SendInfoMessage(enabled ? commandDetails.Item3 : commandDetails.Item2);
+                    args.Player.SendInfoMessage(enabled ? commandDetails.CommandDisabled : commandDetails.CommandEnabled);
 
                 }, $"{commandName}allow")
             {
-                HelpText = commandDetails.Item5
+                HelpText = commandDetails.CommandHelpText
             };
 
             Commands.ChatCommands.Add(command);
