@@ -14,7 +14,7 @@ Function | Permission |
 --- | --- | 
 Use `/cmdallow` | `commandallow.cmd` | 
 Override a User's `/cmdallow` | `commandallow.cmd.override` | 
-Override all instances of the command | `comandallow.overrideall` |
+Override all instances of the command | `commandallow.overrideall` |
 
 ## Configuration
 The formatting of the above permissions except `commandallow.admin` are customisable via the generated config file in `tshock/commandallow.json`
