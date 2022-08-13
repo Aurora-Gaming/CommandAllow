@@ -82,7 +82,8 @@ namespace CommandAllow
 
             Commands.ChatCommands.Add(new Command("commandallow.admin", OnCommand, "ca", "commandallow")
             {
-                HelpText = "Allows for players to toggle receiving certain commands. Mimics the functionality of /wallow or /tpallow."
+                HelpText = "Allows for players to toggle receiving certain commands. Mimics the functionality of /wallow or /tpallow"
+                
             });
             Config.InterceptCommands.ForEach(interceptCommand => AddCommand(interceptCommand));
         }
@@ -225,9 +226,12 @@ namespace CommandAllow
                 }, $"{commandName}allow")
             {
                 HelpText = commandDetails.CommandHelpText
+                
+
             };
 
             Commands.ChatCommands.Add(command);
+            AllowCommand.Add(command);
         }
 
         /// <summary>
