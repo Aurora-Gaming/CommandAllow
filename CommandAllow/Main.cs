@@ -45,7 +45,9 @@ namespace CommandAllow
 
             if (e.Player.HasPermission(Config.CommandAllowOverride.SFormat(e.CommandName))) return;
 
-            var interceptCommand = Config.InterceptCommands[e.CommandName];
+            if (!Commands.ChatCommands.First(c => c.Name == e.CommandName).CanRun(e.Player)) return;
+
+            CommandDetails interceptCommand = Config.InterceptCommands[e.CommandName];
 
             if (interceptCommand.NameIndex > e.Parameters.Count - 1) return;
 
